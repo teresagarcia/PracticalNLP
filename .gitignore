@@ -204,3 +204,7 @@ pyvenv.cfg
 pip-selfcheck.json
 
 # End of https://www.toptal.com/developers/gitignore/api/virtualenv
+
+#Auxiliary files
+*/aux_files/*
+!*/aux_files/.gitkeep
