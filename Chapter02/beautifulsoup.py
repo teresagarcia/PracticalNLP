@@ -2,9 +2,7 @@ from pprint import pprint
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 
-
-
-myurl = "https://yasashiiuta05.blogspot.com/2023/01/letra-shuja-haider-momina-mustehsan-alif.html" # specify the url
+myurl = "https://yasashiiuta05.blogspot.com/2022/08/letra-nabeel-shaukat-aima-baig-ja-tujhe.html" # specify the url
 html = urlopen(myurl).read() # query the website so that it returns a html page
 soupified = BeautifulSoup(html, 'html.parser') # parse the html in the 'html' variable, and store it in Beautiful Soup format
 
