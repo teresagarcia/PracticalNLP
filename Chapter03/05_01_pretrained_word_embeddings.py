@@ -55,4 +55,20 @@ print('-'*10)
 print("Percentage increase in memory usage: {:.2f}% ".format(float((post/pre)*100))) #Percentage increase in memory after loading the model
 print('-'*10)
 
-print("Numver of words in vocablulary: ",len(w2v_model.vocab)) #Number of words in the vocabulary. 
+print("Number of words in vocablulary: ",len(w2v_model.key_to_index)) #Number of words in the vocabulary. 
+
+#Let us examine the model by knowing what the most similar words are, for a given word!
+print("Most similar word for 'beautiful'")
+print(w2v_model.most_similar('beautiful'))
+
+#Let us try with another word! 
+print("Most similar word for 'Toronto'")
+print(w2v_model.most_similar('toronto'))
+
+#What is the vector representation for a word?
+print("Vector representation for 'computer'") 
+print(w2v_model['computer'])
+
+
+
+
