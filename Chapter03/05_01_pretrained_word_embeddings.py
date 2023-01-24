@@ -3,20 +3,20 @@ import wget
 import gzip
 import shutil
 
-gn_vec_path = "other/GoogleNews-vectors-negative300.bin"
+gn_vec_path = "models/GoogleNews-vectors-negative300.bin"
 if not os.path.exists("GoogleNews-vectors-negative300.bin"):
-    if not os.path.exists("other/GoogleNews-vectors-negative300.bin"):
+    if not os.path.exists("models/GoogleNews-vectors-negative300.bin"):
         #Downloading the reqired model
-        if not os.path.exists("other/GoogleNews-vectors-negative300.bin.gz"):
-            wget.download("https://drive.google.com/u/0/uc?id=0B7XkCwpI5KDYNlNUTTlSS21pQmM&export=download", out="other/")
+        if not os.path.exists("models/GoogleNews-vectors-negative300.bin.gz"):
+            wget.download("https://drive.google.com/u/0/uc?id=0B7XkCwpI5KDYNlNUTTlSS21pQmM&export=download", out="models")
         else:
-            gn_vec_zip_path = "other/GoogleNews-vectors-negative300.bin.gz"
+            gn_vec_zip_path = "models/GoogleNews-vectors-negative300.bin.gz"
         #Extracting the required model
         with gzip.open(gn_vec_zip_path, 'rb') as f_in:
             with open(gn_vec_path, 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
     # else:
-    #     gn_vec_path = "other/" + gn_vec_path
+    #     gn_vec_path = "models/" + gn_vec_path
 
 print(f"Model at {gn_vec_path}")
 
