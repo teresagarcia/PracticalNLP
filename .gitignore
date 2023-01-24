@@ -208,4 +208,5 @@ pip-selfcheck.json
 #Auxiliary files
 */aux_files/*
 !*/aux_files/.gitkeep
-other/*
+models/*
+data/*
