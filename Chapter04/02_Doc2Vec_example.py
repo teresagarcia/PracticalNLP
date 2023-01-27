@@ -93,5 +93,6 @@ from sklearn.metrics import classification_report, confusion_matrix
 print("Report of results:")
 print(classification_report(test_cats, preds))
 
+print("Confusion matrix:")
 print(confusion_matrix(test_cats,preds))
 
