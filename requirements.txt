@@ -24,3 +24,4 @@ fasttext==0.9.2
 pytorch-pretrained-bert==0.6.2
 pytorch-nlp==0.5.0
 tqdm==4.64.1 
+ktrain==0.33.1
