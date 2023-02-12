@@ -239,4 +239,119 @@ loss = loss_func(logits, batched_labels)
 print("Loss:", loss)
 
 ### 5. Training/Fitting [fastai]
-##para mañana
+print("Training/Fitting...")
+learn = Learner(dls, model, loss_func=nn.CrossEntropyLoss(), metrics=[accuracy])
+
+print(learn.lr_find())
+
+print(learn.fit_one_cycle(5, lr_max=3e-3))
+
+###6. Using a Language Model via AWD-LSTM [fastai]
+fastai_vocab = make_vocab(token_counter)
+
+combined_df = pd.concat([train_df, valid_df])
+
+amazon_polarity = DataBlock(blocks=(TextBlock.from_df('text', seq_len=128, vocab=fastai_vocab),
+                                    CategoryBlock),
+                            get_x=ColReader('text'),
+                            get_y=ColReader('label'),
+                            splitter=IndexSplitter(range(40000, 42000)))
+
+# Passing a custom DataFrame in and splitting by the index!
+dls = amazon_polarity.dataloaders(combined_df, bs=32)
+
+print(" We can see that we’re not using a simple tokenizer that just separates on spaces anymore! This tokenizer has lots of additional special tokens and special rules to help with better feature/token engeineering! (e.g. xxbos -> beginning of a text, and xxmaj -> next word capitalized)")
+print(dls.train.show_batch())
+
+learn = text_classifier_learner(dls, AWD_LSTM, metrics=[accuracy])
+
+print(learn.lr_find())
+
+print(learn.fine_tune(5, base_lr=3e-3))
+print("Regularization come into effect! - Less difference between train and valid loss, it is not overfitting.")
+
+### 7. Using a Language Model via DistilBERT [HuggingFace & PyTorch & fastai]
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
+print("Using a Language Model via DistilBERT...")
+hf_tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+hf_model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased")
+
+tokenizer_outputs = hf_tokenizer(sample_text, return_tensors="pt")
+print("DistilBERT tokenizer outputs: \n", tokenizer_outputs)
+
+print("BERT's tokenizer returns 2 items, input_ids (numericalization of tokens) and attention_mask (manually lets you control attention on specific tokens). DistilBERT will take both of these as input! ")
+print(tokenizer_outputs['input_ids'].shape, tokenizer_outputs['attention_mask'].shape)
+
+class HF_Dataset(torch.utils.data.Dataset):
+    def __init__(self, df, hf_tokenizer):
+        self.df = df
+        self.hf_tokenizer = hf_tokenizer
+        
+        # label 1 is negative sentiment and label 2 is positive sentiment
+        self.label_map = {1:0, 2:1}
+        
+    def __len__(self):
+        return len(self.df)
+
+    def decode(self, token_ids):
+        return ' '.join([hf_tokenizer.decode(x) for x in tokenizer_outputs['input_ids']])
+    
+    def decode_to_original(self, token_ids):
+        return self.hf_tokenizer.decode(token_ids.squeeze())
+
+    def __getitem__(self, index):
+        label, title, text = self.df.iloc[index]
+        label = self.label_map[label]
+        label = torch.tensor(label)
+
+        tokenizer_output = self.hf_tokenizer(text, return_tensors="pt", padding='max_length', truncation=True, max_length=512)
+        
+        tokenizer_output['input_ids'].squeeze_()
+        tokenizer_output['attention_mask'].squeeze_()
+        
+        return tokenizer_output, label
+    
+
+print("Create new HF Dataset...")
+train_dataset = HF_Dataset(train_df, hf_tokenizer)
+valid_dataset = HF_Dataset(valid_df, hf_tokenizer)
+
+tokenizer_outputs, label = train_dataset[0]
+tokenizer_outputs.keys(), label
+
+print("Decode tokenizer output...")
+print(train_dataset.decode(tokenizer_outputs['input_ids'])[:500])
+
+
+print("Create Dataloaders...")
+train_dl = DataLoader(train_dataset, bs=16, shuffle=True)
+valid_dl = DataLoader(valid_dataset, bs=16)
+dls = DataLoaders(train_dl, valid_dl)
+
+print("To allow this model to be trained by fastai, we need to ensure that the model simply takes a single input, and returns the logits")
+
+class HF_Model(nn.Module):
+  
+    def __init__(self, hf_model):
+        super().__init__()
+        
+        self.hf_model = hf_model
+        
+    def forward(self, tokenizer_outputs):
+        
+        model_output = self.hf_model(**tokenizer_outputs)
+        
+        return model_output.logits
+    
+final_model = HF_Model(hf_model)
+
+logits = final_model(batched_data)
+print("logits:\n", logits)
+
+learn = Learner(dls, model.cuda(), loss_func=nn.CrossEntropyLoss(), metrics=[accuracy])
+
+print(learn.lr_find())
+
+print("Training with DistilBERT...")
+print(learn.fit_one_cycle(3, 1e-4))
