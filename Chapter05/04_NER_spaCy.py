@@ -73,9 +73,9 @@ print(Counter(items).most_common(3))
 sentences = [x for x in article.sents]
 print(sentences[13])
 
-# displacy.serve(nlp(str(sentences[13])), style='ent')
+displacy.serve(nlp(str(sentences[13])), style='ent')
 
-# displacy.serve(nlp(str(sentences[13])), style='dep', options = {'distance': 120})
+displacy.serve(nlp(str(sentences[13])), style='dep', options = {'distance': 120})
 
 print("Verbatim, extract part-of-speech and lemmatize this sentence.")
 print([(x.orth_,x.pos_, x.lemma_) for x in [y for y in nlp(str(sentences[13])) if not y.is_stop and y.pos_ != 'PUNCT']])
