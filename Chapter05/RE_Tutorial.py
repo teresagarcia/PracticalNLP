@@ -21,36 +21,10 @@ from tqdm import tqdm
 mpl.use('WebAgg')
 pd.set_option('display.max_colwidth', 200)
 
-print("Scrape and load data...")
-# indicate address for chosen URL
-url = "https://www.rigzone.com/news/what_could_omicron_cost_global_oil_market-03-dec-2021-167199-article"
-# open the URL for reading
-html = urllib.request.urlopen(url)
-# parsing the html file
-htmlParse = BeautifulSoup(html, 'html.parser')
-
-parsed_text = ""
-
-for para in htmlParse.find_all("p"):
-    #parsed_text_str += str(para.get_text())
-    parsed_text = " ".join((parsed_text, str(para.get_text())))
-    
-    
-sentences = [[i] for i in nlp(parsed_text).sents]
-print(sentences[:5])
-
-if not os.path.exists("data/Chapter05/article_text.csv"):
-    myheaders = ['sentence']
-    myvalues = sentences
-    filename = 'data/Chapter05/article_text.csv'
-    with open(filename, 'w',newline='') as myfile:
-        writer = csv.writer(myfile)
-        writer.writerow(myheaders)
-        writer.writerows(myvalues)
-    df = pd.read_csv('data/Chapter05/article_text.csv')
-    df.to_csv('data/Chapter05/article_text_clean.csv', index=False)
-
-csv_sentences = pd.read_csv("data/Chapter05/article_text_clean.csv")
+print("Load data...")
+# import wikipedia sentences
+candidate_sentences = pd.read_csv("data/Chapter05/wiki_sentences_v2.csv")
+candidate_sentences.shape
 
 print("Get entity pairs...")
 def get_entities(sent):
@@ -102,11 +76,11 @@ def get_entities(sent):
   return [ent1.strip(), ent2.strip()]
 
 
-print("Get entities for \"The film had 200 patents\"", get_entities("the film had 200 patents"))
+print("Get entities for \"The film had 200 patents\"-->", get_entities("the film had 200 patents"))
 
 entity_pairs = []
 
-for i in tqdm(csv_sentences["sentence"]):
+for i in tqdm(candidate_sentences["sentence"]):
     entity_pairs.append(get_entities(i))
 
 print("Some entity pairs:\n", entity_pairs[:7])
@@ -136,9 +110,9 @@ def get_relation(sent):
   return(span.text)
   
 
-print("Get relation for \"John completed the task\"", get_relation("John completed the task"))
+print("Get relation for \"John completed the task\"-->", get_relation("John completed the task"))
 
-relations = [get_relation(i) for i in tqdm(csv_sentences["sentence"])]
+relations = [get_relation(i) for i in tqdm(candidate_sentences["sentence"])]
 print("Relations count:\n", pd.Series(relations).value_counts()[:10])
 
 print("Display Entity Relations into Graphs...")
@@ -152,17 +126,7 @@ target = [i[1] for i in entity_pairs]
 kg_df = pd.DataFrame({'source':source, 'target':target, 'edge':relations})
 
 # create a directed-graph from a dataframe
-G=nx.from_pandas_edgelist(kg_df, "source", "target", 
-                          edge_attr=True, create_using=nx.MultiDiGraph())
-                          
-
-plt.figure(figsize=(12,12))
-pos = nx.spring_layout(G)
-nx.draw(G, with_labels=True, node_color='skyblue', edge_cmap=plt.cm.Blues, pos = pos)
-plt.show()
-
-#Filter relations to show
-G=nx.from_pandas_edgelist(kg_df[kg_df['edge']=="cost"], "source", "target", 
+G=nx.from_pandas_edgelist(kg_df[kg_df['edge']=="composed by"], "source", "target", 
                           edge_attr=True, create_using=nx.MultiDiGraph())
 
 plt.figure(figsize=(12,12))
