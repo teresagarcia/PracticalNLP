@@ -35,3 +35,6 @@ transformers==4.26.1
 textacy==0.12.0 
 networkx==2.8.7
 html5lib==1.1 
+sumy==0.11.0 
+summa==1.2.0 
+bert-extractive-summarizer==0.10.1 
